@@ -1,23 +1,57 @@
-// A working gta6-cover-art-01 entry (Node 22, standard library only): the app is this directory's app/ folder, plain
-// static files a desktop browser loads offline (app/index.html and its ES modules, no library and no network
-// request), and the program hands it in. It copies app/ and screenshots/ from beside this file to /output and writes
-// /output/dossier.json, the summary the judge reads, with the vendored make.fun library. Only the plumbing, not the
-// cover art the bounty asks for: Cover Snap, a plain one-photo square cover with a sunset tint and a bold caption,
-// exported as a 1080 x 1080 PNG. Its two sample photos (app/samples/) were made for make.fun with an image model and
-// are free to use. Build your own GTA-style cover maker in its place, put your 3 or 4 PNG or JPEG screenshots in
-// screenshots/ (the first by name is the cover) and run it.
+// Sunset Cover Studio's hand-in program (Node 22, standard library only): the app is this directory's app/ folder,
+// plain static files a desktop browser loads offline (app/index.html and its ES modules, no library and no network
+// request), and the program hands it in. It copies app/ and screenshots/ from beside this file to /output, runs a
+// pre-flight validation over the copies, and writes /output/dossier.json, the summary the judge reads, with the
+// vendored make.fun library. The app turns a person's photos and a caption into GTA-style multi-panel cover art —
+// six slanted panel layouts, six colour grades, Anton poster lettering — exported as PNGs at 1080 x 1080,
+// 1080 x 1350 and 1920 x 1080. Its sample photos (app/samples/) were made with an image model and are free to use.
 //
 // Serve it locally with `node serve.ts`, then open http://localhost:8080.
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-app.ts';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+
+// Sunset Cover Studio's own pre-flight: walk the copied app/ and screenshots/
+// once and refuse early, with a readable reason, when a file the scorer would
+// refuse has slipped in (an oversized screenshot, a stray symlink, an app/
+// tree past its entry cap). buildDossier below stays the authority — this
+// pass only turns its refusals into messages a maker can act on.
+function validateHandIn(appDir: string, shotsDir: string): { appFiles: number; appBytes: number; shots: string[] } {
+  let appFiles = 0;
+  let appBytes = 0;
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isSymbolicLink()) throw new Error(`validate: ${full} is a symbolic link; app/ holds plain files only`);
+      if (entry.isDirectory()) {
+        appFiles++;
+        walk(full);
+      } else if (entry.isFile()) {
+        appFiles++;
+        appBytes += statSync(full).size;
+      }
+    }
+  };
+  walk(appDir);
+  if (appFiles > 993) throw new Error(`validate: app/ holds ${appFiles} entries, over the 993 allowed`);
+  if (appBytes > 50331648) throw new Error(`validate: app/ comes to ${appBytes} bytes, over the 50331648 allowed`);
+  const shots = existsSync(shotsDir)
+    ? readdirSync(shotsDir).filter((name) => !name.startsWith('.')).sort()
+    : [];
+  if (shots.length < 3 || shots.length > 4) throw new Error(`validate: screenshots/ holds ${shots.length} images, needs 3 or 4`);
+  for (const name of shots) {
+    const bytes = statSync(join(shotsDir, name)).size;
+    if (bytes > 262144) throw new Error(`validate: screenshots/${name} is ${bytes} bytes, over the 262144 allowed`);
+  }
+  return { appFiles, appBytes, shots };
+}
 
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
@@ -28,13 +62,19 @@ if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), joi
 // scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files in app/ or 48 MiB of app
 // files, in all, or a path under app/ over 1000 bytes: app/ counts beside /output's own 1000-entry cap, its
 // screenshots/ and dossier.json).
-writeFileSync(
-  join(out, 'dossier.json'),
-  buildDossier(out, {
-    text_max_bytes: 163840,
-    screenshots: { max: 4, max_bytes: 262144 },
-    app_max_files: 993,
-    app_max_bytes: 50331648,
-    app_path_max_bytes: 1000,
-  }),
+const summary = validateHandIn(join(out, 'app'), join(out, 'screenshots'));
+const dossier = buildDossier(out, {
+  text_max_bytes: 163840,
+  screenshots: { max: 4, max_bytes: 262144 },
+  app_max_files: 993,
+  app_max_bytes: 50331648,
+  app_path_max_bytes: 1000,
+});
+writeFileSync(join(out, 'dossier.json'), dossier);
+
+// A one-line receipt on stderr (stdout stays clean, and stderr never reaches
+// the dossier, so both grader runs still write byte-identical output).
+process.stderr.write(
+  `sunset-cover-studio: handed in app/ (${summary.appFiles} entries, ${summary.appBytes} bytes) ` +
+    `with screenshots ${summary.shots.join(', ')}; dossier.json is ${dossier.byteLength} bytes.\n`,
 );

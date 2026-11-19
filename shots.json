@@ -1,5 +1,1 @@
-[
-  { "name": "1-cover.jpg", "query": "?shot=cover&photo=pier&caption=Sunset%20Heist", "w": 1080, "h": 1080 },
-  { "name": "2-editor.jpg", "query": "?shot=editor&photo=boulevard&caption=Boulevard%20Queen", "w": 1280, "h": 720 },
-  { "name": "3-cover.jpg", "query": "?shot=cover&photo=boulevard&caption=Boulevard%20Queen", "w": 1080, "h": 1080 }
-]
+[{"h":720,"name":"1-cover.jpg","query":"?shot=cover&photo=driver,cruiser,neon,pier,boulevard&caption=Sunset%20Heist&subtitle=Vice%20Shores&layout=collage5&grade=vice&size=wide&style=sunset","w":1280},{"h":720,"name":"2-editor.jpg","query":"?shot=editor&photo=cruiser,driver,neon,boulevard&caption=Palm%20Heat&subtitle=Ocean%20Drive&layout=quad4&grade=teal&size=wide&style=ice","w":1280},{"h":1280,"name":"3-cover.jpg","query":"?shot=cover&photo=neon,driver,cruiser&caption=Midnight%20Run&subtitle=Neon%20District&layout=trio3&grade=neon&size=portrait&style=neon","w":1024},{"h":1024,"name":"4-cover.jpg","query":"?shot=cover&photo=cruiser,boulevard,driver,pier,neon,driver&caption=Golden%20Hour&subtitle=Coral%20Coast&layout=mosaic6&grade=golden&size=square&style=gold","w":1024}]

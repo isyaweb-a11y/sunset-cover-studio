@@ -3,20 +3,79 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cover Snap</title>
+<title>Sunset Cover Studio — GTA-style cover art maker</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <main class="app">
-  <section class="controls">
-    <h1>Cover Snap</h1>
-    <p>A photo and a caption, made into a square cover.</p>
-    <label>Photo <input id="photo" type="file" accept="image/*"></label>
-    <label>Caption <input id="caption" type="text" maxlength="40" value="Sunset Heist"></label>
-    <button id="export" type="button">Export PNG 1080 x 1080</button>
-    <p id="status" role="status"></p>
+  <aside class="controls">
+    <header class="brand">
+      <h1>Sunset Cover Studio</h1>
+      <p>Your photos, cut into a multi-panel poster with sunset lettering. Pick photos, arrange the panels, export a PNG.</p>
+    </header>
+
+    <section class="group" aria-labelledby="photos-h">
+      <h2 id="photos-h">1 · Photos</h2>
+      <label class="file-pick">Add your photos
+        <input id="fileInput" type="file" accept="image/*" multiple>
+      </label>
+      <p class="hint">…or drag them onto the cover. They never leave this machine.</p>
+      <div id="photoStrip" class="photo-strip" aria-label="Loaded photos"></div>
+      <p class="hint">Demo photos:</p>
+      <div id="sampleRow" class="chip-row"></div>
+    </section>
+
+    <section class="group" aria-labelledby="layout-h">
+      <h2 id="layout-h">2 · Panel layout</h2>
+      <div id="layoutRow" class="btn-row"></div>
+    </section>
+
+    <section class="group" aria-labelledby="panel-h">
+      <h2 id="panel-h">3 · Arrange the panel</h2>
+      <div id="panelRow" class="btn-row"></div>
+      <p id="panelLabel" class="panel-label"></p>
+      <label>Photo in this panel <select id="panelPhoto"></select></label>
+      <label>Zoom <input id="panelZoom" type="range" min="0.4" max="4" step="0.01" value="1"></label>
+      <label>Panel grade <select id="panelGrade"></select></label>
+      <div class="btn-row">
+        <button id="fillAll" type="button">Fill all panels with this photo</button>
+        <button id="resetPanel" type="button">Reset position</button>
+      </div>
+      <p class="hint">Drag on the cover to reposition the selected panel; scroll to zoom it.</p>
+    </section>
+
+    <section class="group" aria-labelledby="grade-h">
+      <h2 id="grade-h">4 · Colour grade</h2>
+      <div id="gradeRow" class="btn-row"></div>
+      <label>Intensity <input id="intensity" type="range" min="0" max="1" step="0.01" value="0.85"></label>
+      <label class="check"><input id="grainToggle" type="checkbox" checked> Film grain</label>
+      <label class="check"><input id="vignetteToggle" type="checkbox" checked> Vignette</label>
+    </section>
+
+    <section class="group" aria-labelledby="caption-h">
+      <h2 id="caption-h">5 · Caption</h2>
+      <label>Title <input id="titleInput" type="text" maxlength="26" value="Sunset Heist"></label>
+      <label>Subtitle <input id="subtitleInput" type="text" maxlength="34" value="Vice Shores"></label>
+      <div id="styleRow" class="btn-row"></div>
+    </section>
+
+    <section class="group" aria-labelledby="export-h">
+      <h2 id="export-h">6 · Export</h2>
+      <div id="sizeRow" class="btn-row"></div>
+      <div class="export-row">
+        <button id="export-square" type="button">PNG 1080 × 1080</button>
+        <button id="export-portrait" type="button">PNG 1080 × 1350</button>
+        <button id="export-wide" type="button">PNG 1920 × 1080</button>
+      </div>
+      <p id="status" role="status"></p>
+    </section>
+  </aside>
+
+  <section id="stage" class="stage">
+    <canvas id="preview" width="960" height="540" aria-label="Cover preview — drag to reposition the selected panel"></canvas>
+    <p class="stage-hint">Live preview · the dashed outline is the selected panel</p>
   </section>
-  <canvas id="cover" width="1080" height="1080" aria-label="The cover"></canvas>
 </main>
 <script type="module" src="./src/main.js"></script>
 </body>
